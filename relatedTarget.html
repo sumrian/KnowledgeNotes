@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>relatedTarget属性演示</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ec 100%);
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .container {
+        max-width: 1000px;
+        width: 100%;
+        margin: 20px auto;
+      }
+
+      header {
+        text-align: center;
+        padding: 30px 0;
+        margin-bottom: 30px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 2.8rem;
+        color: #2c3e50;
+        margin-bottom: 15px;
+      }
+
+      .subtitle {
+        font-size: 1.3rem;
+        color: #7f8c8d;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      @media (max-width: 768px) {
+        .content {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .demo-area {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        padding: 30px;
+        transition: transform 0.3s ease;
+      }
+
+      .demo-area:hover {
+        transform: translateY(-5px);
+      }
+
+      .demo-title {
+        color: #3498db;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f1f1;
+      }
+
+      .boxes-container {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin: 30px 0;
+        flex-wrap: wrap;
+      }
+
+      .box {
+        width: 150px;
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .box::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        z-index: -1;
+        transition: opacity 0.3s ease;
+      }
+
+      .box:hover::before {
+        opacity: 0.9;
+      }
+
+      .box-1 {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      }
+
+      .box-2 {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      }
+
+      .box-3 {
+        background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+      }
+
+      .box-4 {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      }
+
+      .event-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        font-family: "Courier New", monospace;
+      }
+
+      .event-item {
+        margin: 10px 0;
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      .event-label {
+        font-weight: bold;
+        color: #2c3e50;
+      }
+
+      .event-value {
+        color: #e74c3c;
+        word-break: break-all;
+      }
+
+      .explanation {
+        background: #e3f2fd;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 25px;
+        border-left: 4px solid #3498db;
+      }
+
+      .explanation h3 {
+        color: #3498db;
+        margin-bottom: 15px;
+      }
+
+      .explanation p {
+        margin-bottom: 15px;
+      }
+
+      .code-block {
+        background: #2c3e50;
+        color: #ecf0f1;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
+        font-family: "Courier New", monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+      }
+
+      .other-events {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+
+      .event-btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        background: #3498db;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+        min-width: 120px;
+      }
+
+      .event-btn:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+      }
+
+      .event-btn:active {
+        transform: translateY(1px);
+      }
+
+      .event-log {
+        background: #2c3e50;
+        color: #ecf0f1;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        font-family: "Courier New", monospace;
+        height: 250px;
+        overflow-y: auto;
+      }
+
+      .log-entry {
+        margin-bottom: 8px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .log-timestamp {
+        color: #7f8c8d;
+        margin-right: 10px;
+      }
+
+      .log-message {
+        color: #ecf0f1;
+      }
+
+      .highlight {
+        background: rgba(255, 235, 59, 0.3);
+        border: 2px solid #ffeb3b;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 30px 0;
+        color: #7f8c8d;
+        margin-top: 30px;
+        width: 100%;
+        border-top: 1px solid #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>relatedTarget 属性演示</h1>
+        <p class="subtitle">探索 mouseover 和 mouseout 事件中的相关元素信息</p>
+      </header>
+
+      <div class="content">
+        <div class="demo-area">
+          <h2 class="demo-title">鼠标事件演示区</h2>
+
+          <div class="boxes-container">
+            <div class="box box-1" id="box1">盒子 1</div>
+            <div class="box box-2" id="box2">盒子 2</div>
+            <div class="box box-3" id="box3">盒子 3</div>
+            <div class="box box-4" id="box4">盒子 4</div>
+          </div>
+
+          <div class="event-info">
+            <h3>当前事件信息</h3>
+
+            <div class="event-item">
+              <span class="event-label">事件类型:</span>
+              <span class="event-value" id="eventType">无事件</span>
+            </div>
+
+            <div class="event-item">
+              <span class="event-label">当前目标:</span>
+              <span class="event-value" id="currentTarget">-</span>
+            </div>
+
+            <div class="event-item">
+              <span class="event-label">相关元素 (relatedTarget):</span>
+              <span class="event-value" id="relatedTarget">-</span>
+            </div>
+          </div>
+
+          <div class="explanation">
+            <h3>relatedTarget 属性说明</h3>
+            <p>
+              在 <strong>mouseover</strong> 事件中，<code>relatedTarget</code>
+              表示鼠标<strong>移出</strong>的元素。
+            </p>
+            <p>
+              在 <strong>mouseout</strong> 事件中，<code>relatedTarget</code>
+              表示鼠标<strong>移入</strong>的元素。
+            </p>
+            <p>
+              对于其他事件类型，<code>relatedTarget</code> 的值总是
+              <strong>null</strong>。
+            </p>
+
+            <div class="code-block">
+              // 事件监听器示例<br />
+              element.addEventListener('mouseover', function(event) {<br />
+              &nbsp;&nbsp;// 鼠标移入时，relatedTarget 是鼠标来自的元素<br />
+              &nbsp;&nbsp;console.log('来自: ', event.relatedTarget);<br />
+              });<br /><br />
+
+              element.addEventListener('mouseout', function(event) {<br />
+              &nbsp;&nbsp;// 鼠标移出时，relatedTarget 是鼠标前往的元素<br />
+              &nbsp;&nbsp;console.log('前往: ', event.relatedTarget);<br />
+              });
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-area">
+          <h2 class="demo-title">事件日志</h2>
+
+          <div class="event-log" id="eventLog">
+            <!-- 事件日志将在这里显示 -->
+          </div>
+
+          <div class="other-events">
+            <button class="event-btn" id="clickBtn">触发点击事件</button>
+            <button class="event-btn" id="dblClickBtn">触发双击事件</button>
+            <button class="event-btn" id="keyBtn">触发按键事件</button>
+            <button class="event-btn" id="clearLogBtn">清除日志</button>
+          </div>
+
+          <div class="explanation">
+            <h3>其他事件中的 relatedTarget</h3>
+            <p>
+              对于非 mouseover/mouseout 的事件，<code>relatedTarget</code>
+              属性总是返回 <strong>null</strong>。
+            </p>
+            <p>
+              尝试点击上面的按钮触发不同类型的事件，观察日志中
+              <code>relatedTarget</code> 的值。
+            </p>
+
+            <div class="code-block">
+              // 对于其他事件类型<br />
+              element.addEventListener('click', function(event) {<br />
+              &nbsp;&nbsp;console.log(event.relatedTarget); // 总是 null<br />
+              });
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          relatedTarget 属性演示 &copy; 2023 | 仅对 mouseover 和 mouseout
+          事件有效
+        </p>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const boxes = document.querySelectorAll(".box");
+        const eventType = document.getElementById("eventType");
+        const currentTarget = document.getElementById("currentTarget");
+        const relatedTarget = document.getElementById("relatedTarget");
+        const eventLog = document.getElementById("eventLog");
+        const clearLogBtn = document.getElementById("clearLogBtn");
+
+        // 添加时间戳的日志函数
+        function logEvent(message) {
+          const now = new Date();
+          const timestamp = `[${now
+            .getHours()
+            .toString()
+            .padStart(2, "0")}:${now
+            .getMinutes()
+            .toString()
+            .padStart(2, "0")}:${now
+            .getSeconds()
+            .toString()
+            .padStart(2, "0")}]`;
+          const logEntry = document.createElement("div");
+          logEntry.className = "log-entry";
+          logEntry.innerHTML = `<span class="log-timestamp">${timestamp}</span><span class="log-message">${message}</span>`;
+          eventLog.appendChild(logEntry);
+          eventLog.scrollTop = eventLog.scrollHeight;
+        }
+
+        // 为每个盒子添加事件监听器
+        boxes.forEach((box) => {
+          // mouseover 事件
+          box.addEventListener("mouseover", function (event) {
+            updateEventInfo(
+              "mouseover",
+              event.currentTarget,
+              event.relatedTarget
+            );
+            logEvent(
+              `mouseover: ${
+                event.currentTarget.textContent
+              } (来自: ${getElementName(event.relatedTarget)})`
+            );
+            box.classList.add("highlight");
+          });
+
+          // mouseout 事件
+          box.addEventListener("mouseout", function (event) {
+            updateEventInfo(
+              "mouseout",
+              event.currentTarget,
+              event.relatedTarget
+            );
+            logEvent(
+              `mouseout: ${
+                event.currentTarget.textContent
+              } (前往: ${getElementName(event.relatedTarget)})`
+            );
+            box.classList.remove("highlight");
+          });
+
+          // click 事件
+          box.addEventListener("click", function (event) {
+            updateEventInfo("click", event.currentTarget, event.relatedTarget);
+            logEvent(
+              `click: ${event.currentTarget.textContent} (relatedTarget: null)`
+            );
+          });
+        });
+
+        // 获取元素的名称
+        function getElementName(element) {
+          if (!element) return "null";
+          if (element.id) return `#${element.id}`;
+          if (element.className) return `.${element.className.split(" ")[0]}`;
+          return element.tagName.toLowerCase();
+        }
+
+        // 更新事件信息显示
+        function updateEventInfo(type, current, related) {
+          eventType.textContent = type;
+          currentTarget.textContent = getElementName(current);
+          relatedTarget.textContent = related
+            ? getElementName(related)
+            : "null";
+
+          // 高亮显示相关元素
+          boxes.forEach((box) => box.classList.remove("highlight"));
+          if (related && Array.from(boxes).includes(related)) {
+            related.classList.add("highlight");
+          }
+        }
+
+        // 其他事件按钮
+        document
+          .getElementById("clickBtn")
+          .addEventListener("click", function () {
+            logEvent("点击事件触发 (relatedTarget: null)");
+          });
+
+        document
+          .getElementById("dblClickBtn")
+          .addEventListener("dblclick", function () {
+            logEvent("双击事件触发 (relatedTarget: null)");
+          });
+
+        document
+          .getElementById("keyBtn")
+          .addEventListener("click", function () {
+            // 模拟按键事件
+            const event = new KeyboardEvent("keydown", { key: "A" });
+            document.dispatchEvent(event);
+          });
+
+        // 键盘事件监听器
+        document.addEventListener("keydown", function (event) {
+          logEvent(`按键事件: ${event.key} (relatedTarget: null)`);
+        });
+
+        // 清除日志
+        clearLogBtn.addEventListener("click", function () {
+          eventLog.innerHTML = "";
+          logEvent("日志已清除");
+        });
+
+        // 初始日志
+        logEvent(
+          "页面已加载，请将鼠标在盒子间移动以查看 mouseover/mouseout 事件"
+        );
+        logEvent("点击其他按钮查看不同事件中的 relatedTarget 行为");
+      });
+    </script>
+  </body>
+</html>
