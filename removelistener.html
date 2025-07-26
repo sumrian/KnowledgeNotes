@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事件监听器移除方法比较</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #9b59b6;
+            --secondary-dark: #8e44ad;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --gray: #95a5a6;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e7ec 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--gray);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(550px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 1200px) {
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            padding: 30px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .card-2 .card-icon {
+            background: var(--secondary);
+        }
+        
+        .card-title {
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+        
+        .card-subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+        
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        
+        .code-comment {
+            color: #7f8c8d;
+        }
+        
+        .code-keyword {
+            color: #3498db;
+        }
+        
+        .code-function {
+            color: #f1c40f;
+        }
+        
+        .code-string {
+            color: #2ecc71;
+        }
+        
+        .code-variable {
+            color: #9b59b6;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .status-container {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .status-label {
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        .status-value {
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .active {
+            color: var(--success);
+        }
+        
+        .inactive {
+            color: var(--danger);
+        }
+        
+        .comparison-section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            color: var(--dark);
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .comparison-item {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .comparison-title {
+            font-size: 1.3rem;
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+        
+        .comparison-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .method-1 {
+            color: var(--primary);
+        }
+        
+        .method-2 {
+            color: var(--secondary);
+        }
+        
+        .recommendation {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 40px;
+            box-shadow: 0 10px 30px rgba(46, 204, 113, 0.3);
+        }
+        
+        .recommendation-title {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .recommendation-text {
+            font-size: 1.3rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--gray);
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .event-log {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            height: 150px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .log-timestamp {
+            color: #7f8c8d;
+            margin-right: 10px;
+        }
+        
+        .log-message {
+            color: #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>事件监听器移除方法比较</h1>
+            <p class="subtitle">深入对比 removeEventListener 与 AbortSignal 两种事件移除方法</p>
+        </header>
+        
+        <div class="cards-container">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">1</div>
+                    <div>
+                        <h2 class="card-title">removeEventListener</h2>
+                        <p class="card-subtitle">传统方法 - 通过函数引用移除</p>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+                    <span class="code-comment">// 添加事件监听器</span><br>
+                    <span class="code-keyword">const</span> handleClick = <span class="code-keyword">function</span>() {<br>
+                    &nbsp;&nbsp;console.<span class="code-function">log</span>(<span class="code-string">'点击事件被触发'</span>);<br>
+                    };<br><br>
+                    
+                    element.<span class="code-function">addEventListener</span>(<br>
+                    &nbsp;&nbsp;<span class="code-string">'click'</span>, <br>
+                    &nbsp;&nbsp;handleClick<br>
+                    );<br><br>
+                    
+                    <span class="code-comment">// 移除事件监听器</span><br>
+                    element.<span class="code-function">removeEventListener</span>(<br>
+                    &nbsp;&nbsp;<span class="code-string">'click'</span>, <br>
+                    &nbsp;&nbsp;handleClick <span class="code-comment">// 必须提供相同的函数引用</span><br>
+                    );
+                </div>
+                
+                <h3>特点：</h3>
+                <ul>
+                    <li>需要保留对事件处理函数的引用</li>
+                    <li>移除时必须使用相同的函数引用</li>
+                    <li>适用于所有现代浏览器</li>
+                    <li>匿名函数无法被移除</li>
+                </ul>
+                
+                <div class="controls">
+                    <button class="btn btn-success" id="addTraditional">添加监听器</button>
+                    <button class="btn btn-danger" id="removeTraditional">移除监听器</button>
+                    <button class="btn" id="triggerTraditional">触发事件</button>
+                </div>
+                
+                <div class="status-container">
+                    <div class="status-item">
+                        <span class="status-label">监听器状态：</span>
+                        <span class="status-value inactive" id="traditionalStatus">未添加</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">事件触发次数：</span>
+                        <span class="status-value" id="traditionalCount">0</span>
+                    </div>
+                </div>
+                
+                <div class="event-log" id="traditionalLog">
+                    <!-- 事件日志将在这里显示 -->
+                </div>
+            </div>
+            
+            <div class="card card-2">
+                <div class="card-header">
+                    <div class="card-icon">2</div>
+                    <div>
+                        <h2 class="card-title">AbortSignal</h2>
+                        <p class="card-subtitle">现代方法 - 通过信号控制</p>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+                    <span class="code-comment">// 创建AbortController</span><br>
+                    <span class="code-keyword">const</span> controller = <span class="code-keyword">new</span> <span class="code-function">AbortController</span>();<br>
+                    <span class="code-keyword">const</span> signal = controller.<span class="code-variable">signal</span>;<br><br>
+                    
+                    <span class="code-comment">// 添加带信号的事件监听器</span><br>
+                    element.<span class="code-function">addEventListener</span>(<br>
+                    &nbsp;&nbsp;<span class="code-string">'click'</span>, <br>
+                    &nbsp;&nbsp;() => {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;console.<span class="code-function">log</span>(<span class="code-string">'点击事件被触发'</span>);<br>
+                    &nbsp;&nbsp;},<br>
+                    &nbsp;&nbsp;{ <span class="code-variable">signal</span> } <span class="code-comment">// 传入信号参数</span><br>
+                    );<br><br>
+                    
+                    <span class="code-comment">// 移除所有关联的事件监听器</span><br>
+                    controller.<span class="code-function">abort</span>();
+                </div>
+                
+                <h3>特点：</h3>
+                <ul>
+                    <li>不需要保留函数引用</li>
+                    <li>可一次性移除多个监听器</li>
+                    <li>支持匿名函数</li>
+                    <li>与DOM生命周期集成良好</li>
+                    <li>较新的API（IE不支持）</li>
+                </ul>
+                
+                <div class="controls">
+                    <button class="btn btn-success" id="addAbort">添加监听器</button>
+                    <button class="btn btn-danger" id="removeAbort">移除监听器</button>
+                    <button class="btn" id="triggerAbort">触发事件</button>
+                </div>
+                
+                <div class="status-container">
+                    <div class="status-item">
+                        <span class="status-label">监听器状态：</span>
+                        <span class="status-value inactive" id="abortStatus">未添加</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">事件触发次数：</span>
+                        <span class="status-value" id="abortCount">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">监听器数量：</span>
+                        <span class="status-value" id="abortListenerCount">0</span>
+                    </div>
+                </div>
+                
+                <div class="event-log" id="abortLog">
+                    <!-- 事件日志将在这里显示 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="comparison-section">
+            <h2 class="section-title">方法对比</h2>
+            
+            <div class="comparison-grid">
+                <div class="comparison-item">
+                    <h3 class="comparison-title">兼容性</h3>
+                    <div class="comparison-value method-1">99%+</div>
+                    <p>所有现代浏览器都支持</p>
+                </div>
+                
+                <div class="comparison-item">
+                    <h3 class="comparison-title">代码简洁性</h3>
+                    <div class="comparison-value method-2">★★★★★</div>
+                    <p>不需要维护函数引用</p>
+                </div>
+                
+                <div class="comparison-item">
+                    <h3 class="comparison-title">内存管理</h3>
+                    <div class="comparison-value method-2">更优</div>
+                    <p>更容易避免内存泄漏</p>
+                </div>
+                
+                <div class="comparison-item">
+                    <h3 class="comparison-title">移除多个监听器</h3>
+                    <div class="comparison-value method-2">支持</div>
+                    <p>一次调用移除所有关联监听器</p>
+                </div>
+                
+                <div class="comparison-item">
+                    <h3 class="comparison-title">匿名函数支持</h3>
+                    <div class="comparison-value method-2">支持</div>
+                    <p>可以安全使用匿名函数</p>
+                </div>
+                
+                <div class="comparison-item">
+                    <h3 class="comparison-title">框架集成</h3>
+                    <div class="comparison-value method-2">更优</div>
+                    <p>与组件生命周期配合良好</p>
+                </div>
+            </div>
+            
+            <div class="recommendation">
+                <h2 class="recommendation-title">推荐方法</h2>
+                <p class="recommendation-text">
+                    对于现代Web应用，<strong>推荐使用AbortSignal方法</strong>。它提供了更简洁的API，
+                    更好的内存管理，并且与异步操作（如fetch）的取消机制保持一致。
+                </p>
+                <p class="recommendation-text">
+                    对于需要支持旧浏览器（如Internet Explorer）的项目，可以使用传统的removeEventListener方法。
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>事件监听器移除方法比较 &copy; 2023 | 最佳实践：优先使用AbortSignal</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 传统方法变量
+            let traditionalHandler = null;
+            let traditionalCount = 0;
+            const traditionalStatus = document.getElementById('traditionalStatus');
+            const traditionalCountEl = document.getElementById('traditionalCount');
+            const traditionalLog = document.getElementById('traditionalLog');
+            
+            // AbortSignal方法变量
+            let abortController = null;
+            let abortCount = 0;
+            const abortStatus = document.getElementById('abortStatus');
+            const abortCountEl = document.getElementById('abortCount');
+            const abortListenerCount = document.getElementById('abortListenerCount');
+            const abortLog = document.getElementById('abortLog');
+            let listenerCount = 0;
+            
+            // 添加时间戳的日志函数
+            function logEvent(logElement, message) {
+                const now = new Date();
+                const timestamp = `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `<span class="log-timestamp">${timestamp}</span><span class="log-message">${message}</span>`;
+                logElement.appendChild(logEntry);
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+            
+            // 传统方法 - 添加监听器
+            document.getElementById('addTraditional').addEventListener('click', function() {
+                if (traditionalHandler) {
+                    logEvent(traditionalLog, '监听器已存在，无需重复添加');
+                    return;
+                }
+                
+                traditionalHandler = function() {
+                    traditionalCount++;
+                    traditionalCountEl.textContent = traditionalCount;
+                    logEvent(traditionalLog, '事件触发！');
+                };
+                
+                // 模拟添加事件监听器
+                traditionalStatus.textContent = '已激活';
+                traditionalStatus.className = 'status-value active';
+                logEvent(traditionalLog, '事件监听器已添加');
+            });
+            
+            // 传统方法 - 移除监听器
+            document.getElementById('removeTraditional').addEventListener('click', function() {
+                if (!traditionalHandler) {
+                    logEvent(traditionalLog, '没有可移除的监听器');
+                    return;
+                }
+                
+                // 模拟移除事件监听器
+                traditionalHandler = null;
+                traditionalStatus.textContent = '未添加';
+                traditionalStatus.className = 'status-value inactive';
+                logEvent(traditionalLog, '事件监听器已移除');
+            });
+            
+            // 传统方法 - 触发事件
+            document.getElementById('triggerTraditional').addEventListener('click', function() {
+                if (!traditionalHandler) {
+                    logEvent(traditionalLog, '没有激活的监听器');
+                    return;
+                }
+                
+                // 模拟事件触发
+                traditionalHandler();
+            });
+            
+            // AbortSignal方法 - 添加监听器
+            document.getElementById('addAbort').addEventListener('click', function() {
+                if (abortController) {
+                    logEvent(abortLog, '监听器已存在，添加新监听器');
+                } else {
+                    // 创建新的AbortController
+                    abortController = new AbortController();
+                    listenerCount = 0;
+                    abortStatus.textContent = '已激活';
+                    abortStatus.className = 'status-value active';
+                    logEvent(abortLog, '创建新的AbortController');
+                }
+                
+                // 添加新的监听器
+                listenerCount++;
+                abortListenerCount.textContent = listenerCount;
+                
+                // 模拟添加事件监听器
+                const listenerId = listenerCount;
+                logEvent(abortLog, `添加监听器 #${listenerId}`);
+            });
+            
+            // AbortSignal方法 - 移除监听器
+            document.getElementById('removeAbort').addEventListener('click', function() {
+                if (!abortController) {
+                    logEvent(abortLog, '没有可移除的监听器');
+                    return;
+                }
+                
+                // 移除所有监听器
+                abortController.abort();
+                abortController = null;
+                listenerCount = 0;
+                
+                abortStatus.textContent = '未添加';
+                abortStatus.className = 'status-value inactive';
+                abortListenerCount.textContent = '0';
+                logEvent(abortLog, '所有监听器已移除');
+            });
+            
+            // AbortSignal方法 - 触发事件
+            document.getElementById('triggerAbort').addEventListener('click', function() {
+                if (!abortController) {
+                    logEvent(abortLog, '没有激活的监听器');
+                    return;
+                }
+                
+                if (listenerCount === 0) {
+                    logEvent(abortLog, '没有监听器可触发');
+                    return;
+                }
+                
+                // 模拟事件触发
+                abortCount++;
+                abortCountEl.textContent = abortCount;
+                logEvent(abortLog, `事件触发 (${listenerCount}个监听器响应)`);
+            });
+        });
+    </script>
+</body>
+</html>
