@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>右键菜单与事件传播机制</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+        color: white;
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .container {
+        max-width: 900px;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        margin-top: 20px;
+      }
+      h1 {
+        text-align: center;
+        margin: 20px 0 30px;
+        font-size: 2.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+      .explanation {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        line-height: 1.6;
+      }
+      .demo-area {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        margin: 30px 0;
+      }
+      .content-box {
+        flex: 1;
+        min-width: 300px;
+        height: 300px;
+        background: rgba(30, 40, 100, 0.8);
+        border: 2px dashed #4a9ff9;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        text-align: center;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .content-box:hover {
+        background: rgba(40, 50, 120, 0.9);
+        border-color: #6ab0ff;
+      }
+      .console {
+        flex: 1;
+        min-width: 300px;
+        height: 300px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid #444;
+        border-radius: 10px;
+        padding: 15px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 0.9rem;
+        color: #0f0;
+      }
+      .context-menu {
+        position: absolute;
+        background: #2c3e50;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        min-width: 200px;
+        overflow: hidden;
+        display: none;
+      }
+      .context-menu ul {
+        list-style: none;
+      }
+      .context-menu li {
+        padding: 12px 20px;
+        cursor: pointer;
+        transition: background 0.2s;
+        border-bottom: 1px solid #34495e;
+      }
+      .context-menu li:last-child {
+        border-bottom: none;
+      }
+      .context-menu li:hover {
+        background: #3498db;
+      }
+      .controls {
+        display: flex;
+        gap: 15px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      button {
+        padding: 12px 25px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: bold;
+        transition: all 0.3s;
+      }
+      button:hover {
+        background: #2980b9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+      .info-panel {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
+      .phase {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        margin: 0 5px;
+      }
+      .capture-phase {
+        background: #e74c3c;
+      }
+      .bubble-phase {
+        background: #3498db;
+      }
+      .target-phase {
+        background: #2ecc71;
+      }
+      .log-entry {
+        margin-bottom: 8px;
+        padding: 5px;
+        border-left: 3px solid #3498db;
+      }
+      .event-flow {
+        display: flex;
+        justify-content: space-between;
+        margin: 20px 0;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+      }
+      .flow-step {
+        text-align: center;
+        flex: 1;
+        padding: 10px;
+      }
+      .flow-arrow {
+        display: flex;
+        align-items: center;
+        font-size: 24px;
+        color: #3498db;
+      }
+      .key-point {
+        color: #3498db;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>右键菜单与事件传播机制</h1>
+
+    <div class="container">
+      <div class="explanation">
+        <p>此演示展示了右键菜单的事件传播机制。关键点：</p>
+        <ul>
+          <li>右键点击蓝色区域显示菜单</li>
+          <li>
+            在捕获阶段（<span class="phase capture-phase">CAPTURE</span
+            >）监听全局点击事件以隐藏菜单
+          </li>
+          <li>在菜单项上左键点击时，会先触发捕获阶段的事件处理（隐藏菜单）</li>
+          <li>
+            <span class="key-point">问题：</span>
+            菜单销毁后，菜单项的点击事件还能触发吗？
+          </li>
+        </ul>
+      </div>
+
+      <div class="event-flow">
+        <div class="flow-step">
+          <span class="phase capture-phase">捕获阶段</span> (Window → 目标)
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <span class="phase target-phase">目标阶段</span> (目标元素)
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <span class="phase bubble-phase">冒泡阶段</span> (目标 → Window)
+        </div>
+      </div>
+
+      <div class="demo-area">
+        <div id="content" class="content-box">右键点击此区域显示菜单</div>
+
+        <div class="console">
+          <div id="console-output">
+            <!-- 控制台输出将在这里显示 -->
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="reset">重置日志</button>
+        <button id="showInfo">显示事件机制解释</button>
+      </div>
+
+      <div class="info-panel" id="infoPanel" style="display: none">
+        <h3>事件传播关键机制：</h3>
+        <p>
+          1. <strong>事件传播路径在触发时已确定</strong> -
+          即使元素在传播过程中被移除，事件仍会按原路径传播
+        </p>
+        <p>2. <strong>在捕获阶段移除菜单时</strong>：</p>
+        <ul>
+          <li>菜单DOM被移除，但事件仍会传播到目标元素</li>
+          <li>菜单项的事件监听器仍然存在，直到事件处理完成</li>
+          <li>因此，菜单项的事件<span class="key-point">仍然会执行</span></li>
+        </ul>
+        <p>3. 如果组件在事件处理函数中移除自身的事件监听器，则不会触发</p>
+        <p>
+          4.
+          实际开发中，建议在捕获阶段判断事件目标是否在菜单内，避免过早移除菜单
+        </p>
+      </div>
+    </div>
+
+    <!-- 右键菜单 -->
+    <div id="contextMenu" class="context-menu">
+      <ul>
+        <li data-action="copy">复制</li>
+        <li data-action="paste">粘贴</li>
+        <li data-action="delete">删除</li>
+        <li data-action="rename">重命名</li>
+      </ul>
+    </div>
+
+    <script>
+      // DOM 元素引用
+      const content = document.getElementById("content");
+      const contextMenu = document.getElementById("contextMenu");
+      const consoleOutput = document.getElementById("console-output");
+      const infoPanel = document.getElementById("infoPanel");
+      const resetBtn = document.getElementById("reset");
+      const showInfoBtn = document.getElementById("showInfo");
+
+      // 菜单状态
+      let menuVisible = false;
+
+      // 日志函数
+      function log(message, type = "info") {
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+        entry.innerHTML = `<span class="log-time">${new Date().toLocaleTimeString()}:</span> ${message}`;
+        consoleOutput.appendChild(entry);
+        // 滚动到底部
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+
+        // 在控制台也输出
+        if (type === "error") {
+          console.error(message);
+        } else if (type === "warn") {
+          console.warn(message);
+        } else {
+          console.log(message);
+        }
+      }
+
+      // 显示右键菜单
+      function showMenu(e) {
+        document.body.appendChild(contextMenu);
+        contextMenu.style.display = "block";
+        contextMenu.style.left = `${e.pageX}px`;
+        contextMenu.style.top = `${e.pageY}px`;
+        menuVisible = true;
+
+        log(`菜单已显示 (位置: ${e.pageX}, ${e.pageY})`);
+      }
+
+      // 隐藏右键菜单
+      function hideMenu() {
+        if (menuVisible) {
+          contextMenu.style.display = "none";
+          menuVisible = false;
+          log("菜单已隐藏");
+          contextMenu.remove();
+        }
+      }
+
+      // 事件监听器设置
+      window.addEventListener(
+        "click",
+        (e) => {
+          log(
+            `<span class="phase capture-phase">捕获阶段</span> - 全局点击事件处理 (hideMenu 被调用)`
+          );
+          hideMenu();
+        },
+        true
+      );
+
+      window.addEventListener(
+        "contextmenu",
+        (e) => {
+          log(
+            `<span class="phase capture-phase">捕获阶段</span> - 全局右键菜单事件处理 (hideMenu 被调用)`
+          );
+          hideMenu();
+        },
+        true
+      );
+
+      content.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        log(
+          `<span class="phase target-phase">目标阶段</span> - 内容区域右键事件 (showMenu 被调用)`
+        );
+        showMenu(e);
+      });
+
+      contextMenu.addEventListener("click", (e) => {
+        if (e.target.tagName === "LI") {
+          const action = e.target.dataset.action;
+          log(
+            `<span class="phase target-phase">目标阶段</span> - 菜单项点击: ${action}`
+          );
+
+          // 模拟操作
+          log(`执行操作: ${action}`);
+
+          // 延迟隐藏菜单以展示事件传播
+          setTimeout(() => {
+            hideMenu();
+          }, 500);
+        }
+      });
+
+      // 其他UI事件
+      resetBtn.addEventListener("click", () => {
+        consoleOutput.innerHTML = "";
+        log("日志已重置");
+      });
+
+      showInfoBtn.addEventListener("click", () => {
+        infoPanel.style.display =
+          infoPanel.style.display === "none" ? "block" : "none";
+      });
+
+      // 初始日志
+      log("演示已启动。右键点击蓝色区域显示菜单。");
+      log("问题：在捕获阶段销毁菜单后，菜单项的点击事件还能触发吗？");
+    </script>
+  </body>
+</html>
