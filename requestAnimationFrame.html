@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>requestAnimationFrame 时间戳演示</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+        color: white;
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .container {
+        max-width: 1000px;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        margin-top: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+
+      .subtitle {
+        text-align: center;
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+        opacity: 0.9;
+      }
+
+      .content {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        margin-top: 20px;
+      }
+
+      .explanation {
+        flex: 1;
+        min-width: 300px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+
+      .demo-area {
+        flex: 1;
+        min-width: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .animation-container {
+        width: 100%;
+        height: 300px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 10px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+
+      .ball {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #ff5e62, #ff9966);
+        box-shadow: 0 0 15px rgba(255, 100, 100, 0.7);
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+        margin: 20px 0;
+      }
+
+      button {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 50px;
+        background: #4a00e0;
+        color: white;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      button:hover {
+        background: #8e2de2;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .stats {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        margin-top: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        font-size: 0.9rem;
+      }
+
+      .stat-box {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #ff9966;
+        margin-top: 5px;
+      }
+
+      .highlight {
+        background: rgba(255, 153, 102, 0.3);
+        padding: 2px 5px;
+        border-radius: 3px;
+      }
+
+      .code-block {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 15px;
+        border-radius: 10px;
+        margin: 15px 0;
+        font-family: monospace;
+        overflow-x: auto;
+      }
+
+      .info-box {
+        background: rgba(74, 0, 224, 0.2);
+        border-left: 4px solid #8e2de2;
+        padding: 15px;
+        border-radius: 0 8px 8px 0;
+        margin: 20px 0;
+      }
+
+      h2 {
+        margin: 15px 0 10px;
+        color: #ff9966;
+      }
+
+      p {
+        line-height: 1.6;
+        margin-bottom: 15px;
+      }
+
+      ul {
+        padding-left: 20px;
+        margin-bottom: 15px;
+      }
+
+      li {
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 768px) {
+        .content {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>requestAnimationFrame 时间戳参数</h1>
+    <p class="subtitle">理解DOMHighResTimeStamp参数如何优化动画性能</p>
+
+    <div class="container">
+      <div class="content">
+        <div class="explanation">
+          <h2>时间戳参数的作用</h2>
+          <p>
+            传给
+            <span class="highlight">requestAnimationFrame()</span>
+            的回调函数接收一个
+            <span class="highlight">DOMHighResTimeStamp</span>
+            参数，该参数表示浏览器计划进行下一次重绘的时间点。
+          </p>
+
+          <div class="info-box">
+            <p>这个时间戳非常重要，因为它使开发者能够：</p>
+            <ul>
+              <li>计算自上一帧以来经过的时间（delta time）</li>
+              <li>根据实际经过的时间更新动画状态</li>
+              <li>确保动画速度与帧率无关</li>
+              <li>避免不必要的计算和重绘</li>
+              <li>实现更平滑、更一致的动画效果</li>
+            </ul>
+          </div>
+
+          <h2>对比：使用 vs 未使用时间戳</h2>
+          <p>
+            <strong>未使用时间戳：</strong>
+            动画基于固定的帧率假设。如果实际帧率下降，动画会变慢。
+          </p>
+          <p>
+            <strong>使用时间戳：</strong>
+            动画基于实际经过的时间。无论帧率如何变化，动画速度保持一致。
+          </p>
+
+          <h2>代码示例</h2>
+          <div class="code-block">
+            let lastTime = 0;<br />
+            function animate(timestamp) {<br />
+            &nbsp;&nbsp;// 计算自上一帧以来的时间差<br />
+            &nbsp;&nbsp;const deltaTime = timestamp - lastTime;<br />
+            &nbsp;&nbsp;lastTime = timestamp;<br /><br />
+            &nbsp;&nbsp;// 基于时间差更新位置<br />
+            &nbsp;&nbsp;const distance = (speed * deltaTime) / 1000;<br />
+            &nbsp;&nbsp;element.style.left = `${position + distance}px`;<br /><br />
+            &nbsp;&nbsp;requestAnimationFrame(animate);<br />
+            }<br />
+            requestAnimationFrame(animate);
+          </div>
+        </div>
+
+        <div class="demo-area">
+          <h2>动画演示</h2>
+          <div class="animation-container" id="animationContainer">
+            <div class="ball" id="ball1"></div>
+            <div class="ball" id="ball2"></div>
+          </div>
+
+          <div class="controls">
+            <button id="startBtn">开始动画</button>
+            <button id="pauseBtn">暂停</button>
+            <button id="resetBtn">重置</button>
+            <button id="simulateBtn">模拟性能下降</button>
+          </div>
+
+          <div class="stats">
+            <div class="stat-box">
+              <div>当前帧率</div>
+              <div id="fps" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+              <div>时间戳差值</div>
+              <div id="delta" class="stat-value">0 ms</div>
+            </div>
+            <div class="stat-box">
+              <div>动画时间</div>
+              <div id="time" class="stat-value">0 s</div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <p><strong>上球 (红色):</strong> 使用时间戳参数 - 保持恒定速度</p>
+            <p><strong>下球 (蓝色):</strong> 未使用时间戳 - 速度受帧率影响</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const container = document.getElementById("animationContainer");
+        const ball1 = document.getElementById("ball1");
+        const ball2 = document.getElementById("ball2");
+        const startBtn = document.getElementById("startBtn");
+        const pauseBtn = document.getElementById("pauseBtn");
+        const resetBtn = document.getElementById("resetBtn");
+        const simulateBtn = document.getElementById("simulateBtn");
+        const fpsDisplay = document.getElementById("fps");
+        const deltaDisplay = document.getElementById("delta");
+        const timeDisplay = document.getElementById("time");
+
+        // 初始化球的位置
+        ball1.style.top = "60px";
+        ball1.style.left = "20px";
+        ball1.style.background = "linear-gradient(145deg, #ff5e62, #ff9966)";
+
+        ball2.style.top = "200px";
+        ball2.style.left = "20px";
+        ball2.style.background = "linear-gradient(145deg, #00c6ff, #0072ff)";
+
+        // 动画状态
+        let animationRunning = false;
+        let animationId = null;
+        let lastTimestamp = 0;
+        let startTime = 0;
+        let ball1Position = 20;
+        let ball2Position = 20;
+        let lastFpsUpdate = 0;
+        let frameCount = 0;
+        let currentFps = 0;
+        let simulateLoad = false;
+
+        // 开始动画
+        startBtn.addEventListener("click", () => {
+          if (animationRunning) return;
+
+          animationRunning = true;
+          lastTimestamp = 0;
+          startTime = performance.now();
+          ball1Position = 20;
+          ball2Position = 20;
+          animate(performance.now());
+        });
+
+        // 暂停动画
+        pauseBtn.addEventListener("click", () => {
+          animationRunning = false;
+          if (animationId) {
+            cancelAnimationFrame(animationId);
+          }
+        });
+
+        // 重置动画
+        resetBtn.addEventListener("click", () => {
+          animationRunning = false;
+          if (animationId) {
+            cancelAnimationFrame(animationId);
+          }
+          ball1Position = 20;
+          ball2Position = 20;
+          ball1.style.left = ball1Position + "px";
+          ball2.style.left = ball2Position + "px";
+          fpsDisplay.textContent = "0";
+          deltaDisplay.textContent = "0 ms";
+          timeDisplay.textContent = "0 s";
+          simulateLoad = false;
+        });
+
+        // 模拟性能下降
+        simulateBtn.addEventListener("click", () => {
+          simulateLoad = !simulateLoad;
+          simulateBtn.textContent = simulateLoad ? "停止模拟" : "模拟性能下降";
+        });
+
+        // 主动画函数
+        function animate(timestamp) {
+          if (!animationRunning) return;
+
+          // 计算时间差
+          const deltaTime = lastTimestamp ? timestamp - lastTimestamp : 0;
+          lastTimestamp = timestamp;
+
+          // 更新FPS显示
+          frameCount++;
+          if (timestamp - lastFpsUpdate >= 1000) {
+            currentFps = Math.round(
+              (frameCount * 1000) / (timestamp - lastFpsUpdate)
+            );
+            fpsDisplay.textContent = currentFps;
+            frameCount = 0;
+            lastFpsUpdate = timestamp;
+          }
+
+          // 更新时间显示
+          const elapsedTime = (timestamp - startTime) / 1000;
+          timeDisplay.textContent = elapsedTime.toFixed(1);
+          deltaDisplay.textContent = Math.round(deltaTime);
+
+          // 更新球1位置（使用时间戳）
+          if (deltaTime > 0) {
+            // 基于时间差移动，速度200px/秒
+            ball1Position += (200 * deltaTime) / 1000;
+            ball1.style.left = ball1Position + "px";
+
+            // 如果球移出容器，重置位置
+            if (ball1Position > container.offsetWidth) {
+              ball1Position = -40;
+            }
+          }
+
+          // 更新球2位置（不使用时间戳）
+          // 每帧固定移动4px，速度受帧率影响
+          ball2Position += 4;
+          ball2.style.left = ball2Position + "px";
+
+          // 如果球移出容器，重置位置
+          if (ball2Position > container.offsetWidth) {
+            ball2Position = -40;
+          }
+
+          // 模拟性能下降
+          if (simulateLoad) {
+            // 添加一些计算负载来降低帧率
+            for (let i = 0; i < 1000000; i++) {
+              Math.sqrt(Math.random());
+            }
+          }
+
+          // 请求下一帧
+          animationId = requestAnimationFrame(animate);
+        }
+      });
+    </script>
+  </body>
+</html>
