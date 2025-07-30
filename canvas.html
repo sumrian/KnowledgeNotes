@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas 2D时钟展示</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #001510);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        overflow: hidden;
+        padding: 20px;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      .title {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+
+      .title h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .title p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+
+      .clock-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 40px;
+        width: 100%;
+      }
+
+      .canvas-wrapper {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .canvas-wrapper::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(
+          45deg,
+          #ff0000,
+          #ffff00,
+          #00ff00,
+          #00ffff,
+          #0000ff,
+          #ff00ff
+        );
+        z-index: -1;
+        border-radius: 22px;
+        animation: borderAnimation 3s linear infinite;
+      }
+
+      @keyframes borderAnimation {
+        0% {
+          filter: hue-rotate(0deg);
+        }
+        100% {
+          filter: hue-rotate(360deg);
+        }
+      }
+
+      canvas {
+        display: block;
+        border-radius: 12px;
+      }
+
+      .api-list {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(5px);
+      }
+
+      .api-list h2 {
+        color: white;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.8rem;
+      }
+
+      .api-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+
+      .api-item {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 12px;
+        color: white;
+        font-size: 0.95rem;
+        transition: transform 0.3s ease, background 0.3s ease;
+      }
+
+      .api-item:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px);
+      }
+
+      .api-item .name {
+        font-weight: bold;
+        color: #ffcc00;
+        margin-bottom: 5px;
+      }
+
+      .api-item .desc {
+        font-size: 0.85rem;
+        opacity: 0.8;
+      }
+
+      .digital-clock {
+        color: white;
+        font-size: 1.8rem;
+        margin-top: 20px;
+        text-align: center;
+        font-family: "Courier New", monospace;
+        letter-spacing: 2px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 10px 20px;
+        border-radius: 10px;
+        width: 100%;
+      }
+
+      @media (max-width: 900px) {
+        .clock-container {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .api-list {
+          max-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="title">
+        <h1>Canvas 2D时钟展示</h1>
+        <p>展示Canvas API在创建动态图形中的应用</p>
+      </div>
+
+      <div class="clock-container">
+        <div class="canvas-wrapper">
+          <canvas id="clockCanvas" width="400" height="400"></canvas>
+        </div>
+
+        <div class="api-list">
+          <h2>使用的Canvas API</h2>
+          <div class="api-grid">
+            <div class="api-item">
+              <div class="name">arc()</div>
+              <div class="desc">绘制圆形和圆弧</div>
+            </div>
+            <div class="api-item">
+              <div class="name">lineTo()</div>
+              <div class="desc">绘制直线路径</div>
+            </div>
+            <div class="api-item">
+              <div class="name">fillStyle</div>
+              <div class="desc">设置填充颜色和渐变</div>
+            </div>
+            <div class="api-item">
+              <div class="name">strokeStyle</div>
+              <div class="desc">设置描边颜色</div>
+            </div>
+            <div class="api-item">
+              <div class="name">lineWidth</div>
+              <div class="desc">设置线条宽度</div>
+            </div>
+            <div class="api-item">
+              <div class="name">createRadialGradient()</div>
+              <div class="desc">创建径向渐变</div>
+            </div>
+            <div class="api-item">
+              <div class="name">createLinearGradient()</div>
+              <div class="desc">创建线性渐变</div>
+            </div>
+            <div class="api-item">
+              <div class="name">shadowBlur</div>
+              <div class="desc">设置阴影模糊效果</div>
+            </div>
+            <div class="api-item">
+              <div class="name">shadowColor</div>
+              <div class="desc">设置阴影颜色</div>
+            </div>
+            <div class="api-item">
+              <div class="name">beginPath()</div>
+              <div class="desc">开始新路径</div>
+            </div>
+            <div class="api-item">
+              <div class="name">closePath()</div>
+              <div class="desc">闭合路径</div>
+            </div>
+            <div class="api-item">
+              <div class="name">save() & restore()</div>
+              <div class="desc">保存/恢复画布状态</div>
+            </div>
+            <div class="api-item">
+              <div class="name">translate()</div>
+              <div class="desc">移动画布原点</div>
+            </div>
+            <div class="api-item">
+              <div class="name">rotate()</div>
+              <div class="desc">旋转画布</div>
+            </div>
+            <div class="api-item">
+              <div class="name">fillText()</div>
+              <div class="desc">绘制填充文本</div>
+            </div>
+            <div class="api-item">
+              <div class="name">setLineDash()</div>
+              <div class="desc">设置虚线样式</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="digital-clock" id="digitalClock"></div>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("clockCanvas");
+      const ctx = canvas.getContext("2d");
+      const digitalClock = document.getElementById("digitalClock");
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(centerX, centerY) - 20;
+
+      // 创建径向渐变
+      function createRadialGradient(ctx, x0, y0, r0, x1, y1, r1, colorStops) {
+        const gradient = ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
+        colorStops.forEach((stop) => {
+          gradient.addColorStop(stop.offset, stop.color);
+        });
+        return gradient;
+      }
+
+      // 创建线性渐变
+      function createLinearGradient(ctx, x0, y0, x1, y1, colorStops) {
+        const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+        colorStops.forEach((stop) => {
+          gradient.addColorStop(stop.offset, stop.color);
+        });
+        return gradient;
+      }
+
+      function drawClock() {
+        // 清空画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 保存当前状态
+        ctx.save();
+
+        // 移动原点至中心
+        ctx.translate(centerX, centerY);
+
+        // 绘制表盘背景
+        ctx.beginPath();
+        const bgGradient = createRadialGradient(
+          ctx,
+          0,
+          0,
+          radius * 0.5,
+          0,
+          0,
+          radius * 1.2,
+          [
+            { offset: 0, color: "#0c1e3e" },
+            { offset: 0.7, color: "#142b4d" },
+            { offset: 1, color: "#0a1529" },
+          ]
+        );
+        ctx.fillStyle = bgGradient;
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 绘制表盘外圈
+        ctx.beginPath();
+        const borderGradient = createLinearGradient(
+          ctx,
+          -radius,
+          0,
+          radius,
+          0,
+          [
+            { offset: 0, color: "#ff8c00" },
+            { offset: 0.5, color: "#ffd700" },
+            { offset: 1, color: "#ff8c00" },
+          ]
+        );
+        ctx.strokeStyle = borderGradient;
+        ctx.lineWidth = 8;
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 绘制刻度阴影
+        ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
+        ctx.shadowBlur = 15;
+
+        // 绘制小时刻度
+        ctx.lineWidth = 4;
+        for (let i = 0; i < 12; i++) {
+          const angle = (i * 30 * Math.PI) / 180;
+          ctx.save();
+          ctx.rotate(angle);
+
+          ctx.beginPath();
+          ctx.moveTo(0, -radius + 15);
+          ctx.lineTo(0, -radius + 35);
+          ctx.strokeStyle = "#ffffff";
+          ctx.stroke();
+
+          // 绘制小时数字
+          ctx.save();
+          ctx.rotate(-angle);
+          ctx.font = "bold 22px Arial";
+          ctx.fillStyle = "#ffd700";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const numRadius = radius - 60;
+          const numX = numRadius * Math.sin(angle);
+          const numY = -numRadius * Math.cos(angle);
+          ctx.fillText(i === 0 ? "12" : i.toString(), numX, numY);
+          ctx.restore();
+
+          ctx.restore();
+        }
+
+        // 关闭阴影
+        ctx.shadowBlur = 0;
+
+        // 绘制分钟刻度
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+        for (let i = 0; i < 60; i++) {
+          if (i % 5 !== 0) {
+            // 跳过小时刻度
+            const angle = (i * 6 * Math.PI) / 180;
+            ctx.save();
+            ctx.rotate(angle);
+
+            ctx.beginPath();
+            ctx.moveTo(0, -radius + 20);
+            ctx.lineTo(0, -radius + 30);
+            ctx.stroke();
+
+            ctx.restore();
+          }
+        }
+
+        // 获取当前时间
+        const now = new Date();
+        const hours = now.getHours() % 12;
+        const minutes = now.getMinutes();
+        const seconds = now.getSeconds();
+        const milliseconds = now.getMilliseconds();
+
+        // 更新数字时钟
+        digitalClock.textContent = `${now
+          .getHours()
+          .toString()
+          .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+          .toString()
+          .padStart(2, "0")}`;
+
+        // 绘制秒针
+        ctx.save();
+        const secAngle = ((seconds + milliseconds / 1000) * 6 * Math.PI) / 180;
+        ctx.rotate(secAngle);
+        ctx.beginPath();
+        ctx.moveTo(-8, 0);
+        ctx.lineTo(0, 20);
+        ctx.lineTo(8, 0);
+        ctx.lineTo(0, -radius + 50);
+        ctx.closePath();
+
+        // 秒针渐变
+        const secGradient = createLinearGradient(ctx, 0, -radius + 50, 0, 0, [
+          { offset: 0, color: "#ff0000" },
+          { offset: 0.5, color: "#ff5555" },
+          { offset: 1, color: "#ff0000" },
+        ]);
+        ctx.fillStyle = secGradient;
+        ctx.fill();
+
+        ctx.strokeStyle = "#880000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+
+        // 绘制分针
+        ctx.save();
+        const minAngle = ((minutes + seconds / 60) * 6 * Math.PI) / 180;
+        ctx.rotate(minAngle);
+        ctx.beginPath();
+        ctx.moveTo(-6, 0);
+        ctx.lineTo(0, 15);
+        ctx.lineTo(6, 0);
+        ctx.lineTo(0, -radius + 70);
+        ctx.closePath();
+
+        // 分针渐变
+        const minGradient = createLinearGradient(ctx, 0, -radius + 70, 0, 0, [
+          { offset: 0, color: "#00ccff" },
+          { offset: 0.5, color: "#66e0ff" },
+          { offset: 1, color: "#00ccff" },
+        ]);
+        ctx.fillStyle = minGradient;
+        ctx.fill();
+
+        ctx.strokeStyle = "#0066cc";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+
+        // 绘制时针
+        ctx.save();
+        const hourAngle = ((hours + minutes / 60) * 30 * Math.PI) / 180;
+        ctx.rotate(hourAngle);
+        ctx.beginPath();
+        ctx.moveTo(-8, 0);
+        ctx.lineTo(0, 15);
+        ctx.lineTo(8, 0);
+        ctx.lineTo(0, -radius + 100);
+        ctx.closePath();
+
+        // 时针渐变
+        const hourGradient = createLinearGradient(ctx, 0, -radius + 100, 0, 0, [
+          { offset: 0, color: "#00ff00" },
+          { offset: 0.5, color: "#66ff66" },
+          { offset: 1, color: "#00ff00" },
+        ]);
+        ctx.fillStyle = hourGradient;
+        ctx.fill();
+
+        ctx.strokeStyle = "#008800";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+
+        // 绘制中心点
+        ctx.beginPath();
+        const centerGradient = createRadialGradient(ctx, 0, 0, 0, 0, 0, 12, [
+          { offset: 0, color: "#ffffff" },
+          { offset: 1, color: "#ff0000" },
+        ]);
+        ctx.fillStyle = centerGradient;
+        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = "#000000";
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 绘制装饰环
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 恢复状态
+        ctx.restore();
+
+        // 绘制装饰元素
+        drawDecorations();
+      }
+
+      function drawDecorations() {
+        // 绘制装饰元素
+        ctx.save();
+        ctx.translate(centerX, centerY);
+
+        // 绘制装饰点
+        for (let i = 0; i < 8; i++) {
+          const angle = (i * 45 * Math.PI) / 180;
+          const pointRadius = radius * 0.75;
+          const x = pointRadius * Math.cos(angle);
+          const y = pointRadius * Math.sin(angle);
+
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, Math.PI * 2);
+          const gradient = createRadialGradient(ctx, x, y, 0, x, y, 5, [
+            { offset: 0, color: "#ffffff" },
+            { offset: 1, color: i % 2 === 0 ? "#ff7700" : "#00aaff" },
+          ]);
+          ctx.fillStyle = gradient;
+          ctx.fill();
+        }
+
+        // 绘制虚线环
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 0.85, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.restore();
+      }
+
+      // 动画循环
+      function animate() {
+        drawClock();
+        requestAnimationFrame(animate);
+      }
+
+      // 启动动画
+      animate();
+    </script>
+  </body>
+</html>
