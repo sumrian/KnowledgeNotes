@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>焦点控制：blur()方法与只读字段</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+        color: #333;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        padding: 30px;
+        overflow: hidden;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: linear-gradient(to right, #3498db, #2c3e50);
+        color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+
+      @media (max-width: 768px) {
+        .content {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .panel {
+        background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+
+      .panel:hover {
+        transform: translateY(-5px);
+      }
+
+      .panel h2 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #3498db;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+
+      input:focus,
+      textarea:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+        outline: none;
+      }
+
+      .readonly {
+        background-color: #f0f0f0;
+        color: #555;
+        cursor: not-allowed;
+      }
+
+      .focus-indicator {
+        height: 4px;
+        background: #e74c3c;
+        margin-top: 5px;
+        border-radius: 2px;
+        transition: width 0.3s;
+        width: 0;
+      }
+
+      .focused .focus-indicator {
+        width: 100%;
+        background: #2ecc71;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      button {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(to right, #3498db, #2980b9);
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .btn-danger {
+        background: linear-gradient(to right, #e74c3c, #c0392b);
+      }
+
+      .btn-success {
+        background: linear-gradient(to right, #2ecc71, #27ae60);
+      }
+
+      .explanation {
+        background: #e3f2fd;
+        border-left: 4px solid #3498db;
+        padding: 20px;
+        border-radius: 0 8px 8px 0;
+        margin-top: 30px;
+      }
+
+      .explanation h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+      }
+
+      .code-block {
+        background: #2c3e50;
+        color: #ecf0f1;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        font-family: "Courier New", monospace;
+        overflow-x: auto;
+      }
+
+      .highlight {
+        background-color: rgba(255, 255, 0, 0.2);
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+
+      .comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .comparison-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .comparison-item h4 {
+        margin-bottom: 10px;
+        color: #2c3e50;
+      }
+
+      .comparison-item p {
+        color: #555;
+      }
+
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        background: #2c3e50;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>焦点控制：blur()方法与只读字段</h1>
+        <p class="subtitle">
+          探索HTML只读属性与JavaScript blur()方法的区别与应用场景
+        </p>
+      </header>
+
+      <div class="content">
+        <div class="panel">
+          <h2>使用readonly属性</h2>
+          <p>现代实现方式 - 推荐</p>
+
+          <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" value="guest_user" readonly />
+            <div class="focus-indicator"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">邮箱地址</label>
+            <input type="email" id="email" value="guest@example.com" readonly />
+            <div class="focus-indicator"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="bio">个人简介</label>
+            <textarea id="bio" rows="3" readonly>
+这是一个只读文本区域，无法编辑但可以选中和复制内容。</textarea
+            >
+            <div class="focus-indicator"></div>
+          </div>
+
+          <div class="buttons">
+            <button onclick="toggleReadOnly()">切换只读状态</button>
+            <button class="btn-success" onclick="focusFirst()">
+              聚焦第一个字段
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>使用blur()方法</h2>
+          <p>传统实现方式 - 用于旧浏览器</p>
+
+          <div class="form-group">
+            <label for="old-username">用户名</label>
+            <input type="text" id="old-username" value="legacy_user" />
+            <div class="focus-indicator"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="old-email">邮箱地址</label>
+            <input type="email" id="old-email" value="legacy@example.com" />
+            <div class="focus-indicator"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="old-bio">个人简介</label>
+            <textarea id="old-bio" rows="3">
+这个字段使用blur()方法模拟只读状态。尝试聚焦时会立即失去焦点。</textarea
+            >
+            <div class="focus-indicator"></div>
+          </div>
+
+          <div class="buttons">
+            <button onclick="toggleBlurMethod()">切换blur()模拟</button>
+            <button class="btn-danger" onclick="blurAll()">移除所有焦点</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="explanation">
+        <h3>技术说明与比较</h3>
+
+        <div class="comparison">
+          <div class="comparison-item">
+            <h4>readonly 属性</h4>
+            <p>✓ 语义化实现</p>
+            <p>✓ 允许选中和复制内容</p>
+            <p>✓ 键盘导航友好</p>
+            <p>✓ 现代浏览器标准</p>
+          </div>
+          <div class="comparison-item">
+            <h4>blur() 方法</h4>
+            <p>➤ 传统浏览器兼容方案</p>
+            <p>➤ 无法选中或复制内容</p>
+            <p>➤ 键盘导航可能被打断</p>
+            <p>➤ 主要用于特殊情况</p>
+          </div>
+        </div>
+
+        <div class="code-block">
+          // 使用readonly属性<br />
+          document.getElementById('username').readOnly = true;<br /><br />
+
+          // 使用blur()方法模拟只读<br />
+          document.getElementById('old-username').addEventListener('focus',
+          function() {<br />
+          &nbsp;&nbsp;this.blur(); // 立即移除焦点<br />
+          });
+        </div>
+
+        <p>
+          在现代Web开发中，优先使用<span class="highlight">readonly</span
+          >属性创建只读字段，因为它提供了更好的用户体验和可访问性。<span
+            class="highlight"
+            >blur()</span
+          >方法主要用于特殊场景，如防止用户聚焦某些元素或在特定条件下移除焦点。
+        </p>
+
+        <div class="status-bar" id="status">
+          <div>当前状态: 等待用户操作</div>
+          <div>活动元素: 无</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 初始化blur()模拟
+      let blurEnabled = false;
+
+      // 为传统字段添加focus事件监听器
+      document
+        .getElementById("old-username")
+        .addEventListener("focus", handleBlur);
+      document
+        .getElementById("old-email")
+        .addEventListener("focus", handleBlur);
+      document.getElementById("old-bio").addEventListener("focus", handleBlur);
+
+      // 为所有输入字段添加事件监听器
+      document.querySelectorAll("input, textarea").forEach((field) => {
+        field.addEventListener("focus", function () {
+          this.parentElement.classList.add("focused");
+          updateStatus(`已聚焦: ${this.id}`, this.id);
+        });
+
+        field.addEventListener("blur", function () {
+          this.parentElement.classList.remove("focused");
+          updateStatus("等待用户操作", "无");
+        });
+      });
+
+      // 处理blur()模拟
+      function handleBlur() {
+        if (blurEnabled) {
+          this.blur();
+          updateStatus(`已移除焦点: ${this.id}`, "无");
+        }
+      }
+
+      // 切换只读状态
+      function toggleReadOnly() {
+        const fields = ["username", "email", "bio"];
+        fields.forEach((id) => {
+          const field = document.getElementById(id);
+          field.readOnly = !field.readOnly;
+          field.classList.toggle("readonly", field.readOnly);
+        });
+
+        const state = document.getElementById("username").readOnly
+          ? "启用"
+          : "禁用";
+        updateStatus(`只读属性: ${state}`, "无");
+      }
+
+      // 切换blur()模拟
+      function toggleBlurMethod() {
+        blurEnabled = !blurEnabled;
+        updateStatus(`blur()模拟: ${blurEnabled ? "启用" : "禁用"}`, "无");
+      }
+
+      // 聚焦第一个字段
+      function focusFirst() {
+        document.getElementById("username").focus();
+      }
+
+      // 移除所有焦点
+      function blurAll() {
+        document.activeElement.blur();
+        updateStatus("已移除所有焦点", "无");
+      }
+
+      // 更新状态栏
+      function updateStatus(message, activeElement) {
+        const statusBar = document.getElementById("status");
+        statusBar.innerHTML = `<div>当前状态: ${message}</div><div>活动元素: ${activeElement}</div>`;
+      }
+
+      // 初始化状态
+      updateStatus("等待用户操作", "无");
+    </script>
+  </body>
+</html>
