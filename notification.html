@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>浏览器通知权限请求示例</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        color: #fff;
+      }
+
+      .container {
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        width: 100%;
+        max-width: 800px;
+        overflow: hidden;
+      }
+
+      header {
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 25px 40px;
+        text-align: center;
+        border-bottom: 2px solid #fdbb2d;
+      }
+
+      h1 {
+        font-size: 2.8rem;
+        margin-bottom: 10px;
+        color: #fdbb2d;
+        text-shadow: 0 0 10px rgba(253, 187, 45, 0.5);
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        opacity: 0.8;
+        margin-bottom: 10px;
+      }
+
+      main {
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .explanation {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        border-radius: 15px;
+        line-height: 1.8;
+        font-size: 1.1rem;
+      }
+
+      .code-container {
+        background-color: #1e1e1e;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .code-header {
+        background-color: #333;
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        color: #fdbb2d;
+      }
+
+      .code-block {
+        padding: 25px;
+        font-family: "Courier New", monospace;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        overflow-x: auto;
+        color: #f8f8f2;
+        background-color: #272822;
+      }
+
+      .code-keyword {
+        color: #f92672;
+      }
+
+      .code-function {
+        color: #66d9ef;
+      }
+
+      .code-string {
+        color: #a6e22e;
+      }
+
+      .code-comment {
+        color: #75715e;
+      }
+
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .btn {
+        background: linear-gradient(to right, #fdbb2d, #b21f1f);
+        border: none;
+        color: white;
+        padding: 18px 40px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(178, 31, 31, 0.4);
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(178, 31, 31, 0.6);
+      }
+
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .btn:disabled {
+        background: linear-gradient(to right, #777, #555);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .result-container {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .result-title {
+        font-size: 1.5rem;
+        color: #fdbb2d;
+        text-align: center;
+      }
+
+      .result {
+        min-height: 100px;
+        background-color: rgba(0, 0, 0, 0.4);
+        border-radius: 10px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .status {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .status-item {
+        background-color: rgba(0, 0, 0, 0.4);
+        padding: 15px;
+        border-radius: 10px;
+        flex: 1;
+        min-width: 200px;
+        text-align: center;
+      }
+
+      .status-value {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #fdbb2d;
+        margin-top: 10px;
+      }
+
+      .notification-example {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+      }
+
+      footer {
+        text-align: center;
+        padding: 25px;
+        background-color: rgba(0, 0, 0, 0.5);
+        border-top: 2px solid #fdbb2d;
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2rem;
+        }
+
+        main {
+          padding: 20px;
+        }
+
+        .code-block {
+          font-size: 0.9rem;
+          padding: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>浏览器通知权限</h1>
+        <p class="subtitle">使用 Notification API 请求用户通知权限</p>
+      </header>
+
+      <main>
+        <section class="explanation">
+          <p>
+            现代浏览器提供了Notification
+            API，允许网站向用户显示通知。但在显示通知之前，必须先请求并获取用户的权限。
+          </p>
+          <p>
+            <strong>Notification.requestPermission()</strong>
+            方法用于向用户请求显示通知的权限。它返回一个Promise，解析为用户的选择：
+          </p>
+          <ul>
+            <li><strong>"granted"</strong> - 用户已授予权限</li>
+            <li><strong>"denied"</strong> - 用户已拒绝权限</li>
+            <li><strong>"default"</strong> - 用户未做出选择（视为拒绝）</li>
+          </ul>
+        </section>
+
+        <section class="code-container">
+          <div class="code-header">
+            <span>JavaScript 代码示例</span>
+            <span>requestPermission() 方法</span>
+          </div>
+          <pre
+            class="code-block"
+          ><code><span class="code-comment">// 请求通知权限</span>
+<span class="code-function">Notification</span>.<span class="code-function">requestPermission</span>()
+    .<span class="code-function">then</span>((permission) => {
+        <span class="code-comment">// 用户已做出选择</span>
+        console.<span class="code-function">log</span>(<span class="code-string">'用户响应: '</span>, permission);
+        
+        <span class="code-keyword">if</span> (permission === <span class="code-string">'granted'</span>) {
+            <span class="code-comment">// 创建并显示通知</span>
+            <span class="code-keyword">new</span> <span class="code-function">Notification</span>(<span class="code-string">'通知已启用'</span>, {
+                body: <span class="code-string">'您已允许此网站发送通知'</span>,
+                icon: <span class="code-string">'https://example.com/icon.png'</span>
+            });
+        }
+    });</code></pre>
+        </section>
+
+        <section class="controls">
+          <button id="requestBtn" class="btn">请求通知权限</button>
+          <button id="testBtn" class="btn" disabled>发送测试通知</button>
+        </section>
+
+        <section class="result-container">
+          <h2 class="result-title">权限请求结果</h2>
+          <div id="result" class="result">点击上方按钮请求权限</div>
+
+          <div class="status">
+            <div class="status-item">
+              <div>当前权限状态</div>
+              <div id="currentStatus" class="status-value">未知</div>
+            </div>
+            <div class="status-item">
+              <div>浏览器支持</div>
+              <div id="supportStatus" class="status-value">检查中...</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="notification-example">
+          <h2>通知示例</h2>
+          <p>
+            当权限被授予后，您可以发送通知给用户。通知可用于新消息提醒、更新通知等。
+          </p>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          注意：通知功能需要安全的上下文（HTTPS），在本地文件系统中可能无法正常工作
+        </p>
+        <p>© 2023 浏览器通知API演示 | 使用现代浏览器访问以获得最佳体验</p>
+      </footer>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const requestBtn = document.getElementById("requestBtn");
+        const testBtn = document.getElementById("testBtn");
+        const resultEl = document.getElementById("result");
+        const currentStatusEl = document.getElementById("currentStatus");
+        const supportStatusEl = document.getElementById("supportStatus");
+
+        // 检查浏览器支持情况
+        const isSupported = "Notification" in window;
+        supportStatusEl.textContent = isSupported ? "支持" : "不支持";
+        supportStatusEl.style.color = isSupported ? "#a6e22e" : "#f92672";
+
+        if (!isSupported) {
+          resultEl.textContent = "您的浏览器不支持通知功能";
+          requestBtn.disabled = true;
+          return;
+        }
+
+        // 检查当前权限状态
+        updatePermissionStatus();
+
+        // 请求权限按钮事件
+        requestBtn.addEventListener("click", function () {
+          resultEl.textContent = "请求中...请查看浏览器权限提示";
+
+          // 使用Promise方式请求权限
+          Notification.requestPermission()
+            .then((permission) => {
+              handlePermission(permission);
+              updatePermissionStatus();
+            })
+            .catch((error) => {
+              resultEl.textContent = `请求失败: ${error.message}`;
+              resultEl.style.color = "#f92672";
+            });
+        });
+
+        // 测试通知按钮事件
+        testBtn.addEventListener("click", function () {
+          if (Notification.permission !== "granted") {
+            resultEl.textContent = "您尚未授予通知权限";
+            resultEl.style.color = "#f92672";
+            return;
+          }
+
+          try {
+            const notification = new Notification("测试通知", {
+              body: "这是一个测试通知，用于演示通知功能。",
+              icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgMThjLTEuNjYgMC0zLTEuMzQtMy0zaDZjMCAxLjY2LTEuMzQgMy0zIDN6bTktNS4wNmwtLjYzLS42M0MxOS41NCAxMy4wNiAxOSAyMS43NiAxOSAxMmgxYzAgMy44Ny0zLjEzIDctNyA3cy03LTMuMTMtNy03aDFjMCAuNzYtLjU0IDguOTQtMS4zNyA5LjMxTDMgMTQuOTRDMi4zOSAxNC41NSAyIDEzLjg0IDIgMTNjMC0xLjEuOS0yIDItMmgxLjQxQzUuMTIgNy41NiA4LjI2IDUgMTIgNXM2Ljg4IDIuNTYgNy41OSA2SDE4YzEuMSAwIDIgLjkgMiAydjFjMCAuODQtLjM5IDEuNTUtMSAyaC0xeiIvPjwvc3ZnPg==",
+            });
+
+            resultEl.textContent = "测试通知已发送！";
+            resultEl.style.color = "#a6e22e";
+
+            notification.onclick = function () {
+              window.focus();
+              console.log("通知被点击");
+              notification.close();
+            };
+          } catch (error) {
+            resultEl.textContent = `发送通知失败: ${error.message}`;
+            resultEl.style.color = "#f92672";
+          }
+        });
+
+        // 处理权限结果
+        function handlePermission(permission) {
+          switch (permission) {
+            case "granted":
+              resultEl.textContent = "✅ 用户已授予通知权限";
+              resultEl.style.color = "#a6e22e";
+              testBtn.disabled = false;
+              break;
+            case "denied":
+              resultEl.textContent = "❌ 用户已拒绝通知权限";
+              resultEl.style.color = "#f92672";
+              testBtn.disabled = true;
+              break;
+            default:
+              resultEl.textContent = "❓ 用户未做出选择或关闭了权限请求";
+              resultEl.style.color = "#fdbb2d";
+              testBtn.disabled = true;
+          }
+        }
+
+        // 更新当前权限状态
+        function updatePermissionStatus() {
+          currentStatusEl.textContent = Notification.permission;
+
+          switch (Notification.permission) {
+            case "granted":
+              currentStatusEl.style.color = "#a6e22e";
+              testBtn.disabled = false;
+              break;
+            case "denied":
+              currentStatusEl.style.color = "#f92672";
+              testBtn.disabled = true;
+              break;
+            default:
+              currentStatusEl.style.color = "#fdbb2d";
+              testBtn.disabled = true;
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
