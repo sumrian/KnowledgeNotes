@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow DOM 综合示例</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .panel h2 {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        select, input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .log-container {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            margin-top: 20px;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .info { color: #3498db; }
+        .warning { color: #f39c12; }
+        .error { color: #e74c3c; }
+        .success { color: #2ecc71; }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .custom-element {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Shadow DOM 综合示例</h1>
+        <div class="subtitle">展示多种Shadow DOM方法、属性和生命周期使用</div>
+    </header>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Shadow DOM 操作</h2>
+            <div class="controls">
+                <button id="createShadow">创建Shadow DOM</button>
+                <button id="addElement">添加元素</button>
+                <button id="removeElement">移除元素</button>
+                <button id="changeMode">切换Shadow模式</button>
+                <button id="attachStyle">添加样式</button>
+            </div>
+            
+            <div class="controls">
+                <select id="slotSelector">
+                    <option value="header">Header 插槽</option>
+                    <option value="content">Content 插槽</option>
+                    <option value="footer">Footer 插槽</option>
+                </select>
+                <button id="assignSlot">分配插槽</button>
+                <button id="clearSlots">清空插槽</button>
+            </div>
+            
+            <div class="controls">
+                <input type="color" id="colorPicker" value="#3498db">
+                <button id="changeColor">更改主题颜色</button>
+            </div>
+            
+            <div class="log-container" id="logOutput"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>自定义元素</h2>
+            <div class="controls">
+                <button id="createCustom">创建自定义元素</button>
+                <button id="disconnectCustom">断开连接</button>
+                <button id="reconnectCustom">重新连接</button>
+                <button id="changeAttr">更改属性</button>
+            </div>
+            
+            <div id="customElementContainer">
+                <div class="custom-element">
+                    <h3>自定义元素将显示在这里</h3>
+                    <p>使用上面的按钮控制自定义元素的生命周期</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="panel">
+            <h2>Shadow Host 容器</h2>
+            <div id="shadowHost" class="shadow-host">
+                <div slot="header">默认Header插槽内容</div>
+                <div slot="content">默认Content插槽内容</div>
+                <div slot="footer">默认Footer插槽内容</div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>此示例展示了Shadow DOM的多种功能：创建、模式切换、样式封装、插槽使用、自定义元素生命周期等</p>
+    </footer>
+
+    <script>
+        // 日志记录功能
+        const logOutput = document.getElementById('logOutput');
+        
+        function log(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // 自定义元素类
+        class CustomElement extends HTMLElement {
+            static observedAttributes = ['theme', 'title'];
+            
+            constructor() {
+                super();
+                log('自定义元素: 构造函数被调用', 'info');
+                
+                // 创建Shadow DOM
+                this.attachShadow({ mode: 'open' });
+                
+                // 元素状态
+                this._clickCount = 0;
+            }
+            
+            connectedCallback() {
+                log('自定义元素: 已连接到DOM', 'success');
+                this.render();
+                
+                // 添加事件监听器
+                this.addEventListener('click', this.handleClick);
+            }
+            
+            disconnectedCallback() {
+                log('自定义元素: 已从DOM断开', 'warning');
+                this.removeEventListener('click', this.handleClick);
+            }
+            
+            attributeChangedCallback(name, oldValue, newValue) {
+                log(`自定义元素: 属性 ${name} 已从 ${oldValue} 更改为 ${newValue}`, 'info');
+                if (this.isConnected) {
+                    this.render();
+                }
+            }
+            
+            render() {
+                const theme = this.getAttribute('theme') || 'blue';
+                const title = this.getAttribute('title') || '自定义元素';
+                
+                // 应用主题
+                let themeStyles = '';
+                if (theme === 'blue') {
+                    themeStyles = `background: #e3f2fd; color: #0d47a1;`;
+                } else if (theme === 'green') {
+                    themeStyles = `background: #e8f5e9; color: #1b5e20;`;
+                } else if (theme === 'orange') {
+                    themeStyles = `background: #fff3e0; color: #e65100;`;
+                }
+                
+                this.shadowRoot.innerHTML = `
+                    <style>
+                        :host {
+                            display: block;
+                            padding: 20px;
+                            margin: 15px 0;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                            transition: all 0.3s ease;
+                        }
+                        
+                        .container {
+                            ${themeStyles}
+                            padding: 15px;
+                            border-radius: 6px;
+                        }
+                        
+                        h3 {
+                            margin-top: 0;
+                            border-bottom: 2px solid currentColor;
+                            padding-bottom: 10px;
+                        }
+                        
+                        button {
+                            margin-top: 10px;
+                            padding: 8px 15px;
+                            background: currentColor;
+                            color: white;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        }
+                    </style>
+                    <div class="container">
+                        <h3>${title}</h3>
+                        <p>主题: ${theme}</p>
+                        <p>点击次数: <span id="count">${this._clickCount}</span></p>
+                        <button id="customBtn">点击我</button>
+                        <slot name="custom-content">默认自定义内容</slot>
+                    </div>
+                `;
+                
+                // 添加按钮事件
+                const btn = this.shadowRoot.getElementById('customBtn');
+                btn.addEventListener('click', () => {
+                    this._clickCount++;
+                    this.shadowRoot.getElementById('count').textContent = this._clickCount;
+                    
+                    // 分发自定义事件
+                    const event = new CustomEvent('count-changed', {
+                        detail: { count: this._clickCount },
+                        bubbles: true,
+                        composed: true
+                    });
+                    this.dispatchEvent(event);
+                    
+                    log(`自定义元素: 按钮被点击，当前计数: ${this._clickCount}`, 'info');
+                });
+            }
+            
+            handleClick() {
+                log('自定义元素: 元素被点击', 'info');
+            }
+        }
+        
+        // 注册自定义元素
+        customElements.define('my-custom-element', CustomElement);
+        
+        // DOM元素引用
+        const shadowHost = document.getElementById('shadowHost');
+        let shadowRoot = null;
+        let customElementInstance = null;
+        
+        // 事件监听器
+        document.getElementById('createShadow').addEventListener('click', () => {
+            if (shadowRoot) {
+                log('Shadow DOM 已存在', 'warning');
+                return;
+            }
+            
+            // 创建Shadow Root
+            shadowRoot = shadowHost.attachShadow({ mode: 'open' });
+            log('Shadow DOM 已创建 (open 模式)', 'success');
+            
+            // 添加内容
+            shadowRoot.innerHTML = `
+                <style>
+                    .container {
+                        padding: 20px;
+                        border-radius: 8px;
+                        background: white;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        transition: all 0.3s ease;
+                    }
+                    
+                    h2 {
+                        color: #3498db;
+                        margin-top: 0;
+                    }
+                    
+                    .slot-container {
+                        margin: 15px 0;
+                        padding: 15px;
+                        background: #f8f9fa;
+                        border-radius: 6px;
+                        border: 1px dashed #ddd;
+                    }
+                    
+                    .slot-header {
+                        background: #e3f2fd;
+                    }
+                    
+                    .slot-content {
+                        background: #e8f5e9;
+                    }
+                    
+                    .slot-footer {
+                        background: #fff3e0;
+                    }
+                    
+                    .theme-color {
+                        height: 30px;
+                        border-radius: 4px;
+                        margin-top: 10px;
+                    }
+                </style>
+                <div class="container">
+                    <h2>Shadow DOM 容器</h2>
+                    <div id="themeDisplay" class="theme-color"></div>
+                    
+                    <div class="slot-container slot-header">
+                        <h3>Header 插槽</h3>
+                        <slot name="header">默认Header内容</slot>
+                    </div>
+                    
+                    <div class="slot-container slot-content">
+                        <h3>Content 插槽</h3>
+                        <slot name="content">默认Content内容</slot>
+                    </div>
+                    
+                    <div class="slot-container slot-footer">
+                        <h3>Footer 插槽</h3>
+                        <slot name="footer">默认Footer内容</slot>
+                    </div>
+                    
+                    <div id="dynamicContent"></div>
+                </div>
+            `;
+            
+            // 更新主题显示
+            updateThemeColor();
+        });
+        
+        document.getElementById('changeMode').addEventListener('click', () => {
+            if (!shadowRoot) {
+                log('请先创建Shadow DOM', 'error');
+                return;
+            }
+            
+            // 删除现有Shadow DOM
+            shadowHost.shadowRoot.remove();
+            shadowRoot = null;
+            
+            // 重新创建Shadow DOM
+            shadowRoot = shadowHost.attachShadow({ 
+                mode: shadowRoot.mode === 'open' ? 'closed' : 'open'
+            });
+            
+            log(`Shadow DOM 已切换为 ${shadowRoot.mode} 模式`, 'success');
+            
+            // 重新添加内容
+            shadowRoot.innerHTML = `
+                <style>
+                    .container {
+                        padding: 20px;
+                        border-radius: 8px;
+                        background: white;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                    }
+                    
+                    h2 {
+                        color: #e74c3c;
+                        margin-top: 0;
+                    }
+                    
+                    .slot-container {
+                        margin: 15px 0;
+                        padding: 15px;
+                        background: #f8f9fa;
+                        border-radius: 6px;
+                        border: 1px dashed #ddd;
+                    }
+                    
+                    .theme-color {
+                        height: 30px;
+                        border-radius: 4px;
+                        margin-top: 10px;
+                        background: #e74c3c;
+                    }
+                </style>
+                <div class="container">
+                    <h2>Shadow DOM 容器 (${shadowRoot.mode} 模式)</h2>
+                    <div id="themeDisplay" class="theme-color"></div>
+                    
+                    <div class="slot-container">
+                        <h3>Header 插槽</h3>
+                        <slot name="header">默认Header内容</slot>
+                    </div>
+                    
+                    <div class="slot-container">
+                        <h3>Content 插槽</h3>
+                        <slot name="content">默认Content内容</slot>
+                    </div>
+                    
+                    <div class="slot-container">
+                        <h3>Footer 插槽</h3>
+                        <slot name="footer">默认Footer内容</slot>
+                    </div>
+                    
+                    <div id="dynamicContent"></div>
+                </div>
+            `;
+            
+            // 更新主题显示
+            updateThemeColor();
+        });
+        
+        document.getElementById('addElement').addEventListener('click', () => {
+            if (!shadowRoot) {
+                log('请先创建Shadow DOM', 'error');
+                return;
+            }
+            
+            const dynamicContent = shadowRoot.getElementById('dynamicContent');
+            if (!dynamicContent) return;
+            
+            const newElement = document.createElement('div');
+            newElement.innerHTML = `
+                <p>动态添加的元素 (${new Date().toLocaleTimeString()})</p>
+            `;
+            newElement.style.padding = '10px';
+            newElement.style.background = '#f0f0f0';
+            newElement.style.borderRadius = '4px';
+            newElement.style.marginTop = '10px';
+            
+            dynamicContent.appendChild(newElement);
+            log('已向Shadow DOM添加新元素', 'success');
+        });
+        
+        document.getElementById('removeElement').addEventListener('click', () => {
+            if (!shadowRoot) {
+                log('请先创建Shadow DOM', 'error');
+                return;
+            }
+            
+            const dynamicContent = shadowRoot.getElementById('dynamicContent');
+            if (!dynamicContent || dynamicContent.children.length === 0) {
+                log('没有可移除的元素', 'warning');
+                return;
+            }
+            
+            dynamicContent.removeChild(dynamicContent.lastChild);
+            log('已从Shadow DOM移除元素', 'success');
+        });
+        
+        document.getElementById('attachStyle').addEventListener('click', () => {
+            if (!shadowRoot) {
+                log('请先创建Shadow DOM', 'error');
+                return;
+            }
+            
+            // 创建样式元素
+            const style = document.createElement('style');
+            style.textContent = `
+                .slot-container {
+                    border-left: 4px solid #3498db;
+                    transition: transform 0.3s ease;
+                }
+                
+                .slot-container:hover {
+                    transform: translateY(-5px);
+                }
+            `;
+            
+            shadowRoot.appendChild(style);
+            log('已向Shadow DOM添加新样式', 'success');
+        });
+        
+        document.getElementById('assignSlot').addEventListener('click', () => {
+            const slotName = document.getElementById('slotSelector').value;
+            const slotContent = document.createElement('div');
+            slotContent.textContent = `分配到 ${slotName} 插槽的内容 (${new Date().toLocaleTimeString()})`;
+            slotContent.slot = slotName;
+            
+            shadowHost.appendChild(slotContent);
+            log(`已将内容分配到 ${slotName} 插槽`, 'success');
+        });
+        
+        document.getElementById('clearSlots').addEventListener('click', () => {
+            // 只移除分配的内容，保留默认插槽内容
+            const slotElements = shadowHost.querySelectorAll('[slot]');
+            slotElements.forEach(el => {
+                if (!el.hasAttribute('data-default')) {
+                    el.remove();
+                }
+            });
+            log('已清空所有插槽分配的内容', 'success');
+        });
+        
+        document.getElementById('changeColor').addEventListener('click', () => {
+            const color = document.getElementById('colorPicker').value;
+            
+            if (shadowRoot) {
+                // 更新Shadow DOM中的样式
+                const container = shadowRoot.querySelector('.container');
+                if (container) {
+                    container.style.borderTop = `4px solid ${color}`;
+                }
+                
+                // 更新主题显示
+                updateThemeColor(color);
+            }
+            
+            log(`已更改主题颜色为 ${color}`, 'success');
+        });
+        
+        function updateThemeColor(color = '#3498db') {
+            if (shadowRoot) {
+                const themeDisplay = shadowRoot.getElementById('themeDisplay');
+                if (themeDisplay) {
+                    themeDisplay.style.background = color;
+                }
+            }
+        }
+        
+        // 自定义元素控制
+        document.getElementById('createCustom').addEventListener('click', () => {
+            if (customElementInstance) {
+                log('自定义元素已存在', 'warning');
+                return;
+            }
+            
+            customElementInstance = document.createElement('my-custom-element');
+            customElementInstance.setAttribute('title', '我的自定义元素');
+            customElementInstance.setAttribute('theme', 'blue');
+            
+            // 添加插槽内容
+            const slotContent = document.createElement('div');
+            slotContent.textContent = '这是自定义插槽内容';
+            slotContent.slot = 'custom-content';
+            customElementInstance.appendChild(slotContent);
+            
+            // 添加事件监听
+            customElementInstance.addEventListener('count-changed', (e) => {
+                log(`自定义事件: count-changed (计数: ${e.detail.count})`, 'info');
+            });
+            
+            document.getElementById('customElementContainer').appendChild(customElementInstance);
+        });
+        
+        document.getElementById('disconnectCustom').addEventListener('click', () => {
+            if (!customElementInstance) {
+                log('请先创建自定义元素', 'error');
+                return;
+            }
+            
+            customElementInstance.remove();
+            log('自定义元素已从DOM断开', 'warning');
+        });
+        
+        document.getElementById('reconnectCustom').addEventListener('click', () => {
+            if (!customElementInstance) {
+                log('请先创建自定义元素', 'error');
+                return;
+            }
+            
+            if (document.getElementById('customElementContainer').contains(customElementInstance)) {
+                log('自定义元素已连接', 'warning');
+                return;
+            }
+            
+            document.getElementById('customElementContainer').appendChild(customElementInstance);
+            log('自定义元素已重新连接到DOM', 'success');
+        });
+        
+        document.getElementById('changeAttr').addEventListener('click', () => {
+            if (!customElementInstance) {
+                log('请先创建自定义元素', 'error');
+                return;
+            }
+            
+            const themes = ['blue', 'green', 'orange'];
+            const currentTheme = customElementInstance.getAttribute('theme') || 'blue';
+            const newTheme = themes[(themes.indexOf(currentTheme) + 1) % themes.length];
+            
+            customElementInstance.setAttribute('theme', newTheme);
+            log(`已将自定义元素主题更改为: ${newTheme}`, 'info');
+        });
+        
+        // 初始日志
+        log('页面已加载，请使用控件操作Shadow DOM', 'success');
+    </script>
+</body>
+</html>
