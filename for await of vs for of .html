@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>同步 vs 异步迭代器</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f7fa;
+        color: #333;
+      }
+      h1 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .container {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 30px;
+      }
+      .panel {
+        flex: 1;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        color: #3498db;
+        border-bottom: 2px solid #eaecef;
+        padding-bottom: 10px;
+        margin-top: 0;
+      }
+      .code-block {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        overflow-x: auto;
+        margin: 15px 0;
+        font-family: "Consolas", monospace;
+      }
+      .output {
+        background-color: #2c3e50;
+        color: white;
+        border-radius: 5px;
+        padding: 15px;
+        min-height: 200px;
+        font-family: "Consolas", monospace;
+        overflow-y: auto;
+      }
+      .timestamp {
+        color: #7f8c8d;
+        font-size: 0.9em;
+      }
+      .controls {
+        text-align: center;
+        margin: 20px 0;
+      }
+      button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #2980b9;
+      }
+      .explanation {
+        background-color: #e8f4fc;
+        border-left: 4px solid #3498db;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 0 4px 4px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>同步 vs 异步迭代器可视化演示</h1>
+
+    <div class="container">
+      <div class="panel">
+        <h2>同步迭代器</h2>
+        <div class="code-block">
+          function* syncIterator(max) { let idx = 0; while(idx < max) { yield
+          idx++; } } for (const x of syncIterator(5)) { console.log(x); //
+          立即输出 }
+        </div>
+        <div class="output" id="sync-output"></div>
+      </div>
+
+      <div class="panel">
+        <h2>异步迭代器</h2>
+        <div class="code-block">
+          async function* asyncIterator(max) { let idx = 0; while(idx < max) {
+          // 每个Promise有随机延迟 yield new Promise(resolve => { const delay =
+          Math.floor(Math.random() * 1000); setTimeout(() => resolve(idx++),
+          delay); }); } } // for await...of 会等待每个Promise解决 for await
+          (const x of asyncIterator(5)) { console.log(x); //
+          按顺序输出，但时间不同 }
+        </div>
+        <div class="output" id="async-output"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="run-button">运行演示</button>
+    </div>
+
+    <div class="explanation">
+      <h3>为什么异步迭代器也按顺序输出？</h3>
+      <p>
+        异步迭代器虽然每个 yield 的 Promise 解决时间是随机的，但
+        <code>for await...of</code> 循环会<strong
+          >等待当前 Promise 被解决后</strong
+        >，才继续下一次迭代。
+      </p>
+      <p>这意味着：</p>
+      <ol>
+        <li>迭代器首先 yield 第一个 Promise（值为 0）</li>
+        <li>循环等待这个 Promise 解决，然后输出 0</li>
+        <li>然后迭代器 yield 第二个 Promise（值为 1）</li>
+        <li>循环等待这个 Promise 解决，然后输出 1</li>
+        <li>依此类推...</li>
+      </ol>
+      <p>
+        所以即使每个 Promise 的解决时间是随机的，输出顺序仍然是 0, 1, 2, 3,
+        4，因为循环会等待每个值被解决后再继续。
+      </p>
+    </div>
+
+    <script>
+      document.getElementById("run-button").addEventListener("click", runDemo);
+
+      function runDemo() {
+        // 清除之前的输出
+        document.getElementById("sync-output").innerHTML = "";
+        document.getElementById("async-output").innerHTML = "";
+
+        // 运行同步迭代器演示
+        runSyncDemo();
+
+        // 运行异步迭代器演示
+        runAsyncDemo();
+      }
+
+      function runSyncDemo() {
+        function* syncIterator(max) {
+          let idx = 0;
+          while (idx < max) {
+            yield idx++;
+          }
+        }
+
+        const outputEl = document.getElementById("sync-output");
+        const startTime = Date.now();
+
+        for (const x of syncIterator(5)) {
+          const elapsed = Date.now() - startTime;
+          outputEl.innerHTML += `<div><span class="timestamp">+${elapsed}ms:</span> ${x}</div>`;
+        }
+      }
+
+      async function runAsyncDemo() {
+        async function* asyncIterator(max) {
+          let idx = 0;
+          while (idx < max) {
+            // 每个Promise有随机延迟
+            yield new Promise((resolve) => {
+              const delay = Math.floor(Math.random() * 1000);
+              setTimeout(() => resolve(idx++), delay);
+            });
+          }
+        }
+
+        const outputEl = document.getElementById("async-output");
+        const startTime = Date.now();
+
+        for await (const x of asyncIterator(5)) {
+          const elapsed = Date.now() - startTime;
+          outputEl.innerHTML += `<div><span class="timestamp">+${elapsed}ms:</span> ${x}</div>`;
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>图片探测技术信息收集演示</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary: #4361ee;
+        --secondary: #3f37c9;
+        --success: #4cc9f0;
+        --dark: #1d3557;
+        --light: #f8f9fa;
+        --danger: #e63946;
+        --warning: #ff9e00;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #1d2b64, #f8cdda);
+        color: #333;
+        line-height: 1.6;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+      }
+
+      header {
+        background: var(--dark);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        position: relative;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        opacity: 0.8;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .content {
+        display: flex;
+        padding: 2rem;
+        gap: 2rem;
+      }
+
+      .panel {
+        flex: 1;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+      }
+
+      .panel:hover {
+        transform: translateY(-5px);
+      }
+
+      .panel h2 {
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--success);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .panel h2 i {
+        font-size: 1.5rem;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2rem;
+      }
+
+      .info-card {
+        background: var(--light);
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 4px solid var(--success);
+      }
+
+      .info-card h3 {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        color: var(--dark);
+      }
+
+      .info-card p {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--primary);
+        word-break: break-all;
+      }
+
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .btn {
+        padding: 1rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--secondary);
+        transform: scale(1.03);
+      }
+
+      .btn-danger {
+        background: var(--danger);
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #c1121f;
+        transform: scale(1.03);
+      }
+
+      .btn-warning {
+        background: var(--warning);
+        color: white;
+      }
+
+      .btn-warning:hover {
+        background: #ff8500;
+        transform: scale(1.03);
+      }
+
+      .result-box {
+        background: var(--light);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        min-height: 150px;
+        border: 1px dashed var(--primary);
+      }
+
+      .result-box h3 {
+        margin-bottom: 1rem;
+        color: var(--secondary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      pre {
+        background: #1d3557;
+        color: #f1faee;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .explanation {
+        background: #e9f5ff;
+        border-left: 4px solid var(--success);
+        padding: 1.5rem;
+        border-radius: 0 10px 10px 0;
+        margin-top: 2rem;
+      }
+
+      .explanation h3 {
+        color: var(--dark);
+        margin-bottom: 1rem;
+      }
+
+      .explanation ul {
+        padding-left: 1.5rem;
+      }
+
+      .explanation li {
+        margin-bottom: 0.8rem;
+      }
+
+      .privacy-warning {
+        background: #fff3cd;
+        border-left: 4px solid var(--warning);
+        padding: 1rem;
+        border-radius: 0 8px 8px 0;
+        margin-top: 1.5rem;
+      }
+
+      footer {
+        text-align: center;
+        padding: 2rem;
+        color: white;
+        background: var(--dark);
+        margin-top: 2rem;
+      }
+
+      .counter {
+        display: flex;
+        justify-content: space-around;
+        margin: 1.5rem 0;
+      }
+
+      .counter-item {
+        text-align: center;
+      }
+
+      .counter-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .counter-label {
+        font-size: 0.9rem;
+        color: var(--dark);
+      }
+
+      @media (max-width: 900px) {
+        .content {
+          flex-direction: column;
+        }
+
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1><i class="fas fa-camera"></i> 图片探测技术信息收集演示</h1>
+        <p class="subtitle">
+          展示图片探测如何收集用户设备信息、浏览器信息及行为数据
+        </p>
+      </header>
+
+      <div class="content">
+        <div class="panel">
+          <h2><i class="fas fa-info-circle"></i> 可收集的用户信息</h2>
+          <div class="info-grid">
+            <div class="info-card">
+              <h3>用户代理 (User Agent)</h3>
+              <p id="user-agent"></p>
+            </div>
+            <div class="info-card">
+              <h3>屏幕分辨率</h3>
+              <p id="screen-resolution"></p>
+            </div>
+            <div class="info-card">
+              <h3>浏览器语言</h3>
+              <p id="browser-language"></p>
+            </div>
+            <div class="info-card">
+              <h3>时区</h3>
+              <p id="timezone"></p>
+            </div>
+            <div class="info-card">
+              <h3>设备像素比</h3>
+              <p id="pixel-ratio"></p>
+            </div>
+            <div class="info-card">
+              <h3>颜色深度</h3>
+              <p id="color-depth"></p>
+            </div>
+            <div class="info-card">
+              <h3>是否启用 Cookie</h3>
+              <p id="cookies-enabled"></p>
+            </div>
+            <div class="info-card">
+              <h3>页面来源</h3>
+              <p id="page-referrer"></p>
+            </div>
+          </div>
+
+          <div class="counter">
+            <div class="counter-item">
+              <div class="counter-number" id="time-on-page">0</div>
+              <div class="counter-label">页面停留时间 (秒)</div>
+            </div>
+            <div class="counter-item">
+              <div class="counter-number" id="beacon-count">0</div>
+              <div class="counter-label">信标发送次数</div>
+            </div>
+          </div>
+
+          <div class="privacy-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>隐私提示：</strong>
+            此演示展示了网站可能收集的信息类型。实际应用中应遵守隐私法规并获取用户同意。
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2><i class="fas fa-cogs"></i> 控制面板</h2>
+          <div class="controls">
+            <button class="btn btn-primary" id="send-beacon">
+              <i class="fas fa-paper-plane"></i> 发送图片信标
+            </button>
+
+            <button class="btn btn-warning" id="simulate-ad">
+              <i class="fas fa-ad"></i> 模拟广告点击
+            </button>
+
+            <button class="btn btn-danger" id="clear-log">
+              <i class="fas fa-trash-alt"></i> 清除日志
+            </button>
+          </div>
+
+          <div class="result-box">
+            <h3><i class="fas fa-terminal"></i> 信标发送日志</h3>
+            <pre id="log-output">// 日志将显示在这里...</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="explanation">
+        <h3><i class="fas fa-lightbulb"></i> 图片探测技术说明</h3>
+        <ul>
+          <li>
+            <strong>工作原理：</strong>
+            通过创建一个Image对象并设置其src属性，向服务器发送GET请求，在URL参数中包含要收集的信息
+          </li>
+          <li>
+            <strong>优势：</strong>
+            简单轻量、跨域兼容性好、不阻塞页面加载、不需要处理响应
+          </li>
+          <li>
+            <strong>典型应用：</strong>
+            广告点击跟踪、用户行为分析、错误报告、页面性能监控
+          </li>
+          <li>
+            <strong>隐私考虑：</strong>
+            现代浏览器限制了部分信息的获取，实际应用中应遵守GDPR、CCPA等隐私法规
+          </li>
+          <li>
+            <strong>限制：</strong>
+            数据量受URL长度限制（约2000字符），只能使用GET请求
+          </li>
+        </ul>
+      </div>
+
+      <footer>
+        <p>图片探测技术演示 | 仅用于教育目的 | 展示网站可能收集的信息类型</p>
+      </footer>
+    </div>
+
+    <script>
+      // 初始化收集用户信息
+      function collectUserInfo() {
+        // 设备信息
+        document.getElementById("user-agent").textContent = navigator.userAgent;
+        document.getElementById(
+          "screen-resolution"
+        ).textContent = `${window.screen.width} × ${window.screen.height}`;
+        document.getElementById("browser-language").textContent =
+          navigator.language || navigator.userLanguage;
+        document.getElementById("timezone").textContent =
+          Intl.DateTimeFormat().resolvedOptions().timeZone;
+        document.getElementById("pixel-ratio").textContent =
+          window.devicePixelRatio;
+        document.getElementById(
+          "color-depth"
+        ).textContent = `${window.screen.colorDepth} 位`;
+        document.getElementById("cookies-enabled").textContent =
+          navigator.cookieEnabled ? "是" : "否";
+        document.getElementById("page-referrer").textContent =
+          document.referrer || "无来源信息";
+      }
+
+      // 发送图片信标
+      function sendImageBeacon(eventType = "manual") {
+        const beaconId = Math.floor(Math.random() * 1000000);
+        const timestamp = new Date().toISOString();
+
+        // 收集要发送的信息
+        const data = {
+          event: eventType,
+          beaconId: beaconId,
+          timestamp: timestamp,
+          userAgent: navigator.userAgent,
+          screen: `${screen.width}x${screen.height}`,
+          language: navigator.language || navigator.userLanguage,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          pixelRatio: window.devicePixelRatio,
+          colorDepth: screen.colorDepth,
+          cookiesEnabled: navigator.cookieEnabled,
+          referrer: document.referrer || "direct",
+          timeOnPage: Math.floor((Date.now() - pageLoadTime) / 1000),
+          viewport: `${window.innerWidth}x${window.innerHeight}`,
+        };
+
+        // 创建图片对象发送信标
+        const img = new Image();
+        const params = new URLSearchParams(data).toString();
+
+        // 在实际应用中，这里应该是一个真实的服务器端点
+        // 此处使用一个模拟URL，请求会失败，但我们会记录发送的信息
+        img.src = `https://tracking.example.com/beacon.gif?${params}`;
+
+        // 更新信标计数器
+        beaconCount++;
+        document.getElementById("beacon-count").textContent = beaconCount;
+
+        // 记录发送的信息
+        logEvent(`📡 信标已发送 (ID: ${beaconId})`);
+        logEvent(
+          `事件类型: ${eventType === "manual" ? "手动发送" : "广告点击"}`
+        );
+        logEvent(`发送时间: ${new Date().toLocaleTimeString()}`);
+        logEvent(`携带数据: ${JSON.stringify(data, null, 2)}`);
+        logEvent("--------------------------------------");
+      }
+
+      // 模拟广告点击
+      function simulateAdClick() {
+        // 生成随机位置
+        const x = Math.floor(Math.random() * 80) + 10;
+        const y = Math.floor(Math.random() * 80) + 10;
+
+        logEvent(`🖱️ 模拟广告点击 (位置: X=${x}%, Y=${y}%)`);
+        sendImageBeacon("ad-click");
+      }
+
+      // 记录事件到日志
+      function logEvent(message) {
+        const logElement = document.getElementById("log-output");
+        logElement.textContent = message + "\n" + logElement.textContent;
+      }
+
+      // 清除日志
+      function clearLog() {
+        document.getElementById("log-output").textContent = "// 日志已清除...";
+      }
+
+      // 页面加载时间
+      const pageLoadTime = Date.now();
+      let beaconCount = 0;
+      let timeCounter = 0;
+
+      // 初始化
+      document.addEventListener("DOMContentLoaded", () => {
+        collectUserInfo();
+
+        // 设置事件监听器
+        document.getElementById("send-beacon").addEventListener("click", () => {
+          sendImageBeacon();
+        });
+
+        document
+          .getElementById("simulate-ad")
+          .addEventListener("click", simulateAdClick);
+
+        document
+          .getElementById("clear-log")
+          .addEventListener("click", clearLog);
+
+        // 更新页面停留时间
+        setInterval(() => {
+          timeCounter++;
+          document.getElementById("time-on-page").textContent = timeCounter;
+        }, 1000);
+
+        // 模拟页面关闭时发送信标
+        window.addEventListener("beforeunload", () => {
+          sendImageBeacon("page-unload");
+        });
+      });
+    </script>
+  </body>
+</html>
